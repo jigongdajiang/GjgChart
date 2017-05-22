@@ -39,10 +39,12 @@ public class LineActivity extends AppCompatActivity {
         });
     }
     private void refreshDataMouth() {
+        //准备X轴的数据
         List<String> xValues = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             xValues.add((i + 1) + "月");
         }
+        //准备折线数据集合
         List<LineData> lineDatas = new ArrayList<>();
         LineData lineData1 = new LineData();
         lineData1.setLineColor(Color.parseColor("#FF4657"));
@@ -104,8 +106,9 @@ public class LineActivity extends AppCompatActivity {
         lineData4.setLineValues(lineData4Values);
         lineDatas.add(lineData4);
 
+        //设置折线数据
         try {
-            lineChart.setDataResource(xValues,lineDatas);
+            lineChart.setDataResource(xValues,lineDatas,8);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -161,7 +164,7 @@ public class LineActivity extends AppCompatActivity {
         lineDatas.add(lineData4);
 
         try {
-            lineChart.setDataResource(xValues,lineDatas);
+            lineChart.setDataResource(xValues,lineDatas,3);
         } catch (Exception e) {
             e.printStackTrace();
         }

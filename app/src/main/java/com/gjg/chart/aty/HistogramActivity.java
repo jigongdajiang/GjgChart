@@ -34,7 +34,9 @@ public class HistogramActivity extends AppCompatActivity implements SeekBar.OnSe
             @Override
             public void run() {
                 seekBar.setProgress(99000);
+                //准备饼设置每个柱子对应的数据的转换率
                 histogramView.initData(new float[]{0.08f, 0.07f, 0.06f, 0.05f});
+                //开启动画升起柱子
                 histogramView.start(2);
             }
         },2000);
@@ -43,6 +45,7 @@ public class HistogramActivity extends AppCompatActivity implements SeekBar.OnSe
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         tv_money.setText(String.valueOf(1000 + progress * ((500000 - 1000) / seekBar.getMax())));
+        //根据滑动百分比改变柱子高度
         histogramView.changeProgress(progress);
     }
 

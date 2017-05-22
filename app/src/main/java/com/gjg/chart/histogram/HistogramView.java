@@ -58,7 +58,7 @@ public class HistogramView extends View {
         for (int i = 0; i < rates.length; i++) {
             progress[i] = (int) (25 * 10000 * rates[i]);
         }
-        xWeeks = new String[]{"卓越理财", "集钱包+", "余额宝", "银行存款"};
+        xWeeks = new String[]{"柱子一", "柱子二", "柱子三", "柱子四"};
         text = new int[]{1, 1, 1, 1};
         aniProgress = new int[]{0, 0, 0, 0};
         maxValue = (int) (50 * 10000 * getMax(rates));
@@ -108,7 +108,7 @@ public class HistogramView extends View {
 
         //绘制顶部的描述
         Rect topDesRect = new Rect();
-        String topDes = "一年预期收益比例";
+        String topDes = "一表格描述区域";
         topDesPaint.getTextBounds(topDes, 0, topDes.length(), topDesRect);
         int topDesLength = topDesRect.width();
         int topDesHeight = topDesRect.height();

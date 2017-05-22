@@ -31,14 +31,17 @@ public class PieActivity extends AppCompatActivity {
         setContentView(R.layout.activity_pie);
         piechart = (PieChartView) findViewById(R.id.piechart);
         txtData = (TextView) findViewById(R.id.txtData);
-        values = new ArrayList<>();
-        random = new Random();
-
+        //初始化颜色集合
         colors = new ArrayList<>();
         colors.add(android.R.color.holo_blue_light);
         colors.add(android.R.color.holo_green_light);
         colors.add(android.R.color.holo_red_light);
         colors.add(android.R.color.holo_purple);
+
+        //准备数据集合
+        values = new ArrayList<>();
+        random = new Random();
+
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -61,6 +64,7 @@ public class PieActivity extends AppCompatActivity {
         values.add(random.nextDouble()*100);
         values.add(random.nextDouble()*100);
         values.add(random.nextDouble()*100);
+        //设置数据和颜色集合
         piechart.setDatas(values,colors);
     }
 

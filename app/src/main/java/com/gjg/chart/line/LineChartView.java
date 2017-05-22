@@ -173,6 +173,7 @@ public class LineChartView extends View {
         initSize();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -630,7 +631,9 @@ public class LineChartView extends View {
         float scaledDensity = getContext().getResources().getDisplayMetrics().scaledDensity;
         return (int) (scaledDensity * sp + 0.5f * (sp >= 0 ? 1 : -1));
     }
-
+    public void setDataResource(List<String> xDatas, List<LineData> datas) throws Exception {
+        setDataResource(xDatas,datas,1);
+    }
     /**
      * 设置数据集
      * LineData中的数据集的大小应该与XValue的集合的大小相等
@@ -639,7 +642,7 @@ public class LineChartView extends View {
      * @param xDatas
      * @param datas
      */
-    public void setDataResource(List<String> xDatas, List<LineData> datas) throws Exception {
+    public void setDataResource(List<String> xDatas, List<LineData> datas,int selectTab) throws Exception {
         if (xDatas == null || datas == null || xDatas.size() == 0 || datas.size() == 0) {
             throw new Exception("data source illegal");
         }
@@ -654,6 +657,11 @@ public class LineChartView extends View {
         }
         this.xValues = xDatas;
         this.lineDatas = datas;
+        if(selectTab>=1 && selectTab <= xDatas.size()){
+            this.selectIndex = selectTab;
+        }else{
+            this.selectIndex = 1;
+        }
         lineColorList = new ArrayList<>();
         pointList = new ArrayList<>();
         for (LineData lineData : lineDatas) {
