@@ -145,6 +145,8 @@ public class LineChartView extends View {
 
     //纵轴最大值
     float maxNumber = 0.0f;
+    //数字描述
+    private String xDes = "日";
 
 
     public LineChartView(Context context) {
@@ -449,33 +451,31 @@ public class LineChartView extends View {
             //绘制X轴文本
             String text = xValues.get(i);
             Rect rect = getTextBounds(text, xTextPaint);
-            float textX = x - rect.width() / 2;
-            float textY = y + yOffset + rect.height();
             if (i == selectIndex - 1) {
                 if (x >= xOri - xValueRect.width() / 2) {//只绘制从文字最小显示起点区域
                     float left = x - xValueRect.width() / 2;
 //                    float top = y + yOffset - (xValueRect.height() / 2 - rect.height() / 2);
                     float top = y + yOffset;
-                    canvas.drawRoundRect(left,
-                            top,
-                            left + xValueRect.width(),
-                            top + xValueRect.height(),
+                    RectF r = new RectF();
+                    r.left = left+xyLineWidth;
+                    r.top = top+xyLineWidth;
+                    r.right = left + xValueRect.width()-xyLineWidth;
+                    r.bottom = top + xValueRect.height()-xyLineWidth;
+                    canvas.drawRoundRect(r.left,r.top,r.right,r.bottom,
                             xSelectRadius, xSelectRadius, xTextRectAreaPaint);
-                    canvas.drawRoundRect(left,
-                            top,
-                            left + xValueRect.width(),
-                            top + xValueRect.height(),
+                    canvas.drawRoundRect(r.left,r.top,r.right,r.bottom,
                             xSelectRadius, xSelectRadius, xTextRectPaint);
                     //如果是选中状态，绘制边框
                     xTextPaint.setColor(xSelectedTextcolor);
+                    if(!text.contains(xDes)){
+                        text = text+xDes;
+                    }
                     drawXText(canvas,text,listX.get(i));
-//                    canvas.drawText(text, 0, text.length(), textX, textY, xTextPaint);
                 }
             } else {
                 if (x >= xOri - rect.width() / 2) {//只绘制从文字最小显示起点区域
                     xTextPaint.setColor(xyTextolor);
                     drawXText(canvas,text,listX.get(i));
-//                    canvas.drawText(text, 0, text.length(), textX, textY, xTextPaint);
                 }
             }
         }
@@ -555,7 +555,8 @@ public class LineChartView extends View {
         int[] x = new int[2];
         int maxW = 0;
         int maxH = 0;
-        for (String xValue : xValues) {
+        for (String value : xValues) {
+            String xValue = value+"占";
             Rect rect = getTextBounds(xValue, xTextPaint);
             int w = rect.width();
             if (w > maxW) {
@@ -642,8 +643,8 @@ public class LineChartView extends View {
         float scaledDensity = getContext().getResources().getDisplayMetrics().scaledDensity;
         return (int) (scaledDensity * sp + 0.5f * (sp >= 0 ? 1 : -1));
     }
-    public void setDataResource(List<String> xDatas, List<LineData> datas) throws Exception {
-        setDataResource(xDatas,datas,1);
+    public void setDataResource(List<String> xDatas, List<LineData> datas,String type) throws Exception {
+        setDataResource(xDatas,datas,1,type);
     }
     /**
      * 设置数据集
@@ -653,7 +654,7 @@ public class LineChartView extends View {
      * @param xDatas
      * @param datas
      */
-    public void setDataResource(List<String> xDatas, List<LineData> datas,int selectTab) throws Exception {
+    public void setDataResource(List<String> xDatas, List<LineData> datas,int selectTab,String type) throws Exception {
         if (xDatas == null || datas == null || xDatas.size() == 0 || datas.size() == 0) {
             throw new Exception("data source illegal");
         }
@@ -673,6 +674,7 @@ public class LineChartView extends View {
         }else{
             this.selectIndex = 1;
         }
+        this.xDes = type;
         maxNumber = 0;
         lineColorList = new ArrayList<>();
         pointList = new ArrayList<>();

@@ -42,7 +42,7 @@ public class LineActivity extends AppCompatActivity {
         //准备X轴的数据
         List<String> xValues = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
-            xValues.add((i + 1) + "月");
+            xValues.add((i + 1) + "");
         }
         //准备折线数据集合
         List<LineData> lineDatas = new ArrayList<>();
@@ -108,7 +108,7 @@ public class LineActivity extends AppCompatActivity {
 
         //设置折线数据
         try {
-            lineChart.setDataResource(xValues,lineDatas,8);
+            lineChart.setDataResource(xValues,lineDatas,8,"月");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -166,7 +166,7 @@ public class LineActivity extends AppCompatActivity {
         lineDatas.add(lineData4);
 
         try {
-            lineChart.setDataResource(xValues,lineDatas,3);
+            lineChart.setDataResource(xValues,lineDatas,3,"日");
         } catch (Exception e) {
             e.printStackTrace();
         }
