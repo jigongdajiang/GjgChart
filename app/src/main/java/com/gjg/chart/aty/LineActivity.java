@@ -115,16 +115,18 @@ public class LineActivity extends AppCompatActivity {
     }
     private void refreshDataDay() {
         List<String> xValues = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
-            xValues.add((i + 1) + "日");
+        for (int i = 0; i < 5; i++) {
+            xValues.add((i + 1) + "");
         }
+        xValues.add("昨日");
+        xValues.add("今日");
         List<LineData> lineDatas = new ArrayList<>();
         LineData lineData1 = new LineData();
         lineData1.setLineColor(Color.parseColor("#FF4657"));
         List<Float> lineData1Values = new ArrayList<>();
         for(int i = 0;i<xValues.size();i++){
             Random r = new Random();
-            Float z = r.nextFloat() * 100;
+            Float z = r.nextFloat() * 1000000000;
             lineData1Values.add(z);
         }
         lineData1.setLineValues(lineData1Values);

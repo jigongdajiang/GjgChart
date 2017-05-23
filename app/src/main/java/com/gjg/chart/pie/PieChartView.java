@@ -1,11 +1,13 @@
 package com.gjg.chart.pie;
 
+import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -14,7 +16,9 @@ import android.view.View;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author gaojigong
@@ -22,7 +26,7 @@ import java.util.List;
  * @Description:
  * @date 17/5/19
  */
-public class PieChartView extends View implements ValueAnimator.AnimatorUpdateListener {
+public class PieChartView extends View implements ValueAnimator.AnimatorUpdateListener,ValueAnimator.AnimatorListener {
     private String TAG = getClass().getSimpleName();
     //旋转中Action
     private int ACTION_ROTATION = 1;
@@ -38,7 +42,7 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
     private String defaultColor = "#A9A9A9";
     private List<Double> mNumbers;
     private List<Integer> mColors;
-    private List<Point> points;
+    private List<PointF> points;
     //画布宽高
     private int width, height;
     private double total;
@@ -63,6 +67,8 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
     //中空圆画笔
     private Paint paintCenterCircle;
     private int select = -1;
+    //选中状态存储器
+    private Map<Integer,Integer> selectMap;
 
 
     public PieChartView(Context context) {
@@ -82,6 +88,8 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
     private void init() {
         mNumbers = new ArrayList<>();
         mColors= new ArrayList<>();
+        selectMap = new HashMap<>();
+        points = new ArrayList<>();
         normalOval = new RectF();
         selectOval = new RectF();
 
@@ -126,43 +134,43 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         }
         canvas.rotate(degree);
         if (!mNumbers.isEmpty()) {
-            int startAngle = 0;
-            int sweepAngle = 0;
+            float startAngle = 0;
+            float sweepAngle = 0;
             for (int i = 0; i < mNumbers.size(); i++) {
                 canvas.save();
                 if (i == mNumbers.size() - 1) {
                     sweepAngle = 360 - startAngle;
                 } else {
-                    sweepAngle = (int) (mNumbers.get(i) * 1.0f / total * 360);
+                    sweepAngle = (float) (mNumbers.get(i) * 1.0f / total * 360);
                 }
                 if (select >= 0 && i == select) {
                     selectOval.left = (float) (-width/2 * normalGain);
                     selectOval.right = (float) (width/2 * normalGain);
                     selectOval.top = (float) (-height/2 * normalGain);
                     selectOval.bottom = (float) (height/2 * normalGain);
-                    Point point = points.get(select);
-                    int middle = (point.x + point.y) / 2;
+                    PointF point = points.get(select);
+                    float middle = (point.x + point.y) / 2;
                     if (middle <= 90) {
-                        int left = (int) (Math.cos(Math.toRadians(middle)) * bigerGain);
-                        int top = (int) (Math.sin(Math.toRadians(middle)) * bigerGain);
+                        float left = (float) (Math.cos(Math.toRadians(middle)) * bigerGain);
+                        float top = (float) (Math.sin(Math.toRadians(middle)) * bigerGain);
                         setSelectOval(left,top,1,1);
                     }
                     if (middle > 90 && middle <= 180) {
                         middle = 180 - middle;
-                        int top = (int) (Math.sin(Math.toRadians(middle)) * bigerGain);
-                        int left = (int) (Math.cos(Math.toRadians(middle)) * bigerGain);
+                        float left = (float) (Math.cos(Math.toRadians(middle)) * bigerGain);
+                        float top = (float) (Math.sin(Math.toRadians(middle)) * bigerGain);
                         setSelectOval(left,top,-1,1);
                     }
                     if (middle > 180 && middle <= 270) {
                         middle = 270 - middle;
-                        int left = (int) (Math.sin(Math.toRadians(middle)) * bigerGain);
-                        int top = (int) (Math.cos(Math.toRadians(middle)) * bigerGain);
+                        float left = (float) (Math.sin(Math.toRadians(middle)) * bigerGain);
+                        float top = (float) (Math.cos(Math.toRadians(middle)) * bigerGain);
                         setSelectOval(left,top,-1,-1);
                     }
                     if (middle > 270 && middle <= 360) {
                         middle = 360 - middle;
-                        int top = (int) (Math.sin(Math.toRadians(middle)) * bigerGain);
-                        int left = (int) (Math.cos(Math.toRadians(middle)) * bigerGain);
+                        float left = (float) (Math.cos(Math.toRadians(middle)) * bigerGain);
+                        float top = (float) (Math.sin(Math.toRadians(middle)) * bigerGain);
                         setSelectOval(left,top,1,-1);
                     }
                     paintArc.setColor(getResources().getColor(mColors.get(i)));
@@ -195,14 +203,19 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         mNumbers.addAll(numbers);
         mColors.clear();
         mColors.addAll(colors);
-        points = new ArrayList<>();
+        points.clear();
+        selectMap.clear();
         total = 0;
-        for (Double item : numbers) {
+        select = -1;
+        gain = 0;
+        for(int i=0;i<numbers.size();i++){
+            Double item = numbers.get(i);
             total += item;
-            Point point = new Point();
+            PointF point = new PointF();
             points.add(point);
+            selectMap.put(i,1);
         }
-        rotation();
+        rotation(0,360);
     }
 
     @Override
@@ -210,32 +223,32 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             float x = event.getX();
             float y = event.getY();
-            int radius = 0;
+            double radius = 0;
             // 第一象限
             if (x >= width / 2 && y >= height / 2) {
-                radius = (int) (Math.atan((y - height / 2) * 1.0f
+                radius = (Math.atan((y - height / 2) * 1.0f
                         / (x - width / 2)) * 180 / Math.PI);
             }
             // 第二象限
             if (x <= width / 2 && y >= height / 2) {
-                radius = (int) (Math.atan((width / 2 - x)
+                radius =  (Math.atan((width / 2 - x)
                         / (y - height / 2))
                         * 180 / Math.PI + 90);
             }
             // 第三象限
             if (x <= width / 2 && y <= height / 2) {
-                radius = (int) (Math.atan((height / 2 - y)
+                radius = (Math.atan((height / 2 - y)
                         / (width / 2 - x))
                         * 180 / Math.PI + 180);
             }
             // 第四象限
             if (x >= width / 2 && y <= height / 2) {
-                radius = (int) (Math.atan((x - width / 2)
+                radius = (Math.atan((x - width / 2)
                         / (height / 2 - y))
                         * 180 / Math.PI + 270);
             }
             for (int i = 0; i < points.size(); i++) {
-                Point point = points.get(i);
+                PointF point = points.get(i);
                 if (point.x <= radius && point.y >= radius) {
                     select = i;
                     if (mOnItemChangedListener != null)
@@ -245,7 +258,20 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    gain();
+                    if(1 == selectMap.get(select)){
+                        gain(0,1);
+                    }else{
+                        gain(1,0);
+                    }
+                    for (Map.Entry<Integer, Integer> entry : selectMap.entrySet()) {
+                        int key = entry.getKey();
+                        if(select != key){
+                            selectMap.put(key,1);
+                        }
+                     }
+                    int s = -1*selectMap.get(select);
+                    selectMap.remove(select);
+                    selectMap.put(select,s);
                     return true;
                 }
             }
@@ -264,15 +290,34 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         Log.e(TAG,"degree="+degree+"---gain="+gain);
         invalidate();
     }
+    private boolean isAnimating = false;
+    @Override
+    public void onAnimationStart(Animator animation) {
+        isAnimating = true;
+    }
 
-    private void animateToValue() {
+    @Override
+    public void onAnimationEnd(Animator animation) {
+        isAnimating = false;
+    }
+
+    @Override
+    public void onAnimationCancel(Animator animation) {
+
+    }
+
+    @Override
+    public void onAnimationRepeat(Animator animation) {
+
+    }
+
+
+    private void animateToValue(float start,float stop) {
         if (this.ACTION_ == this.ACTION_ROTATION) {
-            if (valueAnimator == null) {
-                valueAnimator = createAnimator();
-            }
+            valueAnimator = createAnimator(start,stop);
             valueAnimator.setDuration(DURATION);
         } else if (this.ACTION_ == this.ACTION_ENLARGE) {
-            valueAnimator = createAnimator();
+            valueAnimator = createAnimator(start,stop);
             valueAnimator.setDuration(DURATION_GAIN);
         }
         if (valueAnimator.isRunning()) {
@@ -281,34 +326,34 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         valueAnimator.start();
     }
 
-    private ValueAnimator createAnimator() {
+    private ValueAnimator createAnimator(float start,float stop) {
         ValueAnimator valueAnimator = null;
         if (this.ACTION_ == this.ACTION_ROTATION) {
-            valueAnimator = ValueAnimator.ofFloat(0, 360);
+            valueAnimator = ValueAnimator.ofFloat(start, stop);
             valueAnimator.setDuration(DURATION);
         } else if (this.ACTION_ == this.ACTION_ENLARGE) {
-            valueAnimator = ValueAnimator.ofFloat(0, 1.0f);
+            valueAnimator = ValueAnimator.ofFloat(start, stop);
             valueAnimator.setDuration(DURATION_GAIN);
         }
         valueAnimator.setInterpolator(new OvershootInterpolator());
         valueAnimator.addUpdateListener(this);
+        valueAnimator.addListener(this);
         return valueAnimator;
     }
 
 
-    private void rotation() {
+    private void rotation(float start,float stop) {
         this.ACTION_ = this.ACTION_ROTATION;
-        animateToValue();
+        animateToValue(start,stop);
     }
 
-    private void gain() {
+    private void gain(float start,float stop) {
         this.ACTION_ = this.ACTION_ENLARGE;
-        animateToValue();
+        animateToValue(start,stop);
     }
     public void setOnItemChangedListener(OnItemChangedListener listener) {
         this.mOnItemChangedListener = listener;
     }
-
     public interface OnItemChangedListener {
         void onItemChanged(int index, double value);
     }

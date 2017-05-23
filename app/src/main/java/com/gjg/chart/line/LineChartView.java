@@ -13,6 +13,7 @@ import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -118,7 +119,7 @@ public class LineChartView extends View {
     private int xOffset = dpToPx(5);
 
     //Y轴的文字距离Y轴的偏移量
-    private int yOffset = dpToPx(15);
+    private int yOffset = dpToPx(10);
 
     // 默认Y轴放5个值（越多显示的值越精细）
     private int numberOfY = 5;
@@ -164,6 +165,7 @@ public class LineChartView extends View {
         int measuredHeight = measureHeight(heightMeasureSpec);
         int measuredWidth = measureWidth(widthMeasureSpec);
         setMeasuredDimension(measuredWidth, measuredHeight);
+        Log.e("onM","onMeasure");
     }
 
     @Override
@@ -269,6 +271,7 @@ public class LineChartView extends View {
                         xEndOffset = xValueRect.width()/2;
                     }
                     invalidate();
+                    Log.e("invalidate","invalidate");
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -289,13 +292,12 @@ public class LineChartView extends View {
         float eventX = event.getX();
         float eventY = event.getY();
         for (int i = 0; i < xValues.size(); i++) {
-            String text = xValues.get(i);
-            Rect rect = getTextBounds(text, xTextPaint);
-            float x = xInit + interval * i - rect.width() / 2;
-            float y = yOri + yOffset + rect.height();
+            //以最大区域为点击区域
+            float x = xInit + interval * i - xValueRect.width() / 2;
+            float y = yOri + yOffset + xValueRect.height();
             if (eventX >= x &&
-                    eventX <= x + rect.width() &&
-                    eventY >= y - rect.height() &&
+                    eventX <= x + xValueRect.width() &&
+                    eventY >= y - xValueRect.height() &&
                     eventY <= y &&
                     selectIndex != i + 1) {
                 selectIndex = i + 1;
@@ -385,7 +387,7 @@ public class LineChartView extends View {
         xTextPaint.setTextSize(xyTextSize);
         xTextPaint.setStrokeCap(Paint.Cap.ROUND);
         xTextPaint.setColor(xyTextolor);
-        xTextPaint.setTextAlign(Paint.Align.LEFT);
+        xTextPaint.setTextAlign(Paint.Align.CENTER);
         xTextPaint.setStyle(Paint.Style.STROKE);
 
         yTextPaint = new Paint();
@@ -452,7 +454,8 @@ public class LineChartView extends View {
             if (i == selectIndex - 1) {
                 if (x >= xOri - xValueRect.width() / 2) {//只绘制从文字最小显示起点区域
                     float left = x - xValueRect.width() / 2;
-                    float top = y + yOffset - (xValueRect.height() / 2 - rect.height() / 2);
+//                    float top = y + yOffset - (xValueRect.height() / 2 - rect.height() / 2);
+                    float top = y + yOffset;
                     canvas.drawRoundRect(left,
                             top,
                             left + xValueRect.width(),
@@ -465,17 +468,25 @@ public class LineChartView extends View {
                             xSelectRadius, xSelectRadius, xTextRectPaint);
                     //如果是选中状态，绘制边框
                     xTextPaint.setColor(xSelectedTextcolor);
-                    canvas.drawText(text, 0, text.length(), textX, textY, xTextPaint);
+                    drawXText(canvas,text,listX.get(i));
+//                    canvas.drawText(text, 0, text.length(), textX, textY, xTextPaint);
                 }
             } else {
                 if (x >= xOri - rect.width() / 2) {//只绘制从文字最小显示起点区域
                     xTextPaint.setColor(xyTextolor);
-                    canvas.drawText(text, 0, text.length(), textX, textY, xTextPaint);
+                    drawXText(canvas,text,listX.get(i));
+//                    canvas.drawText(text, 0, text.length(), textX, textY, xTextPaint);
                 }
             }
         }
     }
-
+    private void drawXText(Canvas canvas,String text,PointF point){
+        Paint.FontMetrics fontMetrics = xTextPaint.getFontMetrics();
+        float top = fontMetrics.top;//为基线到字体上边框的距离,即上图中的top
+        float bottom = fontMetrics.bottom;//为基线到字体下边框的距离,即上图中的bottom
+        int baseLineY = (int) (point.y + yOffset + xValueRect.centerY() - top/2 - bottom/2);//基线中间点的y轴计算公式
+        canvas.drawText(text,point.x,baseLineY,xTextPaint);
+    }
     /**
      * y轴坐标显示
      */
@@ -662,6 +673,7 @@ public class LineChartView extends View {
         }else{
             this.selectIndex = 1;
         }
+        maxNumber = 0;
         lineColorList = new ArrayList<>();
         pointList = new ArrayList<>();
         for (LineData lineData : lineDatas) {
