@@ -26,7 +26,7 @@ import java.util.Map;
  * @Description:
  * @date 17/5/19
  */
-public class PieChartView extends View implements ValueAnimator.AnimatorUpdateListener,ValueAnimator.AnimatorListener {
+public class PieChartView extends View implements ValueAnimator.AnimatorUpdateListener {
     private String TAG = getClass().getSimpleName();
     //旋转中Action
     private int ACTION_ROTATION = 1;
@@ -290,26 +290,6 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         Log.e(TAG,"degree="+degree+"---gain="+gain);
         invalidate();
     }
-    private boolean isAnimating = false;
-    @Override
-    public void onAnimationStart(Animator animation) {
-        isAnimating = true;
-    }
-
-    @Override
-    public void onAnimationEnd(Animator animation) {
-        isAnimating = false;
-    }
-
-    @Override
-    public void onAnimationCancel(Animator animation) {
-
-    }
-
-    @Override
-    public void onAnimationRepeat(Animator animation) {
-
-    }
 
 
     private void animateToValue(float start,float stop) {
@@ -337,7 +317,6 @@ public class PieChartView extends View implements ValueAnimator.AnimatorUpdateLi
         }
         valueAnimator.setInterpolator(new OvershootInterpolator());
         valueAnimator.addUpdateListener(this);
-        valueAnimator.addListener(this);
         return valueAnimator;
     }
 

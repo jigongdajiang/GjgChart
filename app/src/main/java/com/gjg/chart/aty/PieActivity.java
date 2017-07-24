@@ -42,28 +42,34 @@ public class PieActivity extends AppCompatActivity {
         values = new ArrayList<>();
         random = new Random();
 
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                refreshData();
-                piechart.setOnItemChangedListener(new PieChartView.OnItemChangedListener() {
-                    @Override
-                    public void onItemChanged(int index, double value) {
-                        txtData.setText("index: " +index+ " value: "+value );
-                    }
-                });
-            }
-        },3000);
+//        Handler handler = new Handler();
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                refreshData();
+//                piechart.setOnItemChangedListener(new PieChartView.OnItemChangedListener() {
+//                    @Override
+//                    public void onItemChanged(int index, double value) {
+//                        txtData.setText("index: " +index+ " value: "+value );
+//                    }
+//                });
+//            }
+//        },3000);
+        refreshData();
 
     }
 
     private void refreshData() {
         values.clear();
-        values.add(random.nextDouble()*100);
-        values.add(random.nextDouble()*100);
-        values.add(random.nextDouble()*100);
-        values.add(random.nextDouble()*100);
+//        values.add(random.nextDouble()*100);
+//        values.add(random.nextDouble()*100);
+//        values.add(random.nextDouble()*100);
+//        values.add(random.nextDouble()*100);
+        values.add(24.14);
+        values.add(1.1);
+//        values.add(0.00);
+        values.add(0.00);
+        values.add(4.1);
         //设置数据和颜色集合
         piechart.setDatas(values,colors);
     }

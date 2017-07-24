@@ -1,5 +1,6 @@
 package com.gjg.chart.line;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -122,7 +123,7 @@ public class LineChartView extends View {
     private int yOffset = dpToPx(10);
 
     // 默认Y轴放5个值（越多显示的值越精细）
-    private int numberOfY = 5;
+    private int numberOfY = 4;
 
     //X轴的文字的最大边界
     int[] maxTextX;
@@ -148,7 +149,11 @@ public class LineChartView extends View {
     //数字描述
     private String xDes = "日";
 
+    //绘制区域遮罩偏移量
+    private float zheOffset = 0.0f;
 
+    //遮罩动画时长
+    private static final int Z_DUR = 2*1000;
     public LineChartView(Context context) {
         this(context, null);
     }
@@ -235,6 +240,9 @@ public class LineChartView extends View {
         layerPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         RectF rectFLeft = new RectF(0, yTop, xOri, yOri);
         canvas.drawRect(rectFLeft, layerPaint);
+        float zStart = xOri + zheOffset;
+        RectF rectFCenter = new RectF(zStart, yTop, width, yOri - xyLineWidth / 2);
+        canvas.drawRect(rectFCenter, layerPaint);
 //        RectF rectFRight = new RectF(width - xValueRect.width() / 2, yTop, width, yOri);
 //        canvas.drawRect(rectFRight, layerPaint);
         layerPaint.setXfermode(null);
@@ -360,7 +368,8 @@ public class LineChartView extends View {
                 PointF point = new PointF();
                 Float z = pointList.get(i).get(j);
                 point.x = listX.get(j).x;
-                point.y = listX.get(j).y - (yOri - yTop) * z / maxNumber;
+                float maxDis = (yOri - yTop)/numberOfY * (numberOfY-1);
+                point.y = listX.get(j).y - maxDis * z / maxNumber;
                 positionInList.add(point);
             }
             positionList.add(positionInList);
@@ -461,9 +470,9 @@ public class LineChartView extends View {
                     r.top = top+xyLineWidth;
                     r.right = left + xValueRect.width()-xyLineWidth;
                     r.bottom = top + xValueRect.height()-xyLineWidth;
-                    canvas.drawRoundRect(r.left,r.top,r.right,r.bottom,
+                    canvas.drawRoundRect(r,
                             xSelectRadius, xSelectRadius, xTextRectAreaPaint);
-                    canvas.drawRoundRect(r.left,r.top,r.right,r.bottom,
+                    canvas.drawRoundRect(r,
                             xSelectRadius, xSelectRadius, xTextRectPaint);
                     //如果是选中状态，绘制边框
                     xTextPaint.setColor(xSelectedTextcolor);
@@ -491,9 +500,9 @@ public class LineChartView extends View {
      * y轴坐标显示
      */
     private void setYTitle(List<PointF> listY, Canvas canvas) {
-        float stepNumber = maxNumber / numberOfY;
+        float stepNumber = maxNumber / (numberOfY-1);
 
-        for (int i = 0; i < numberOfY; i++) {
+        for (int i = 0; i <= numberOfY; i++) {
             DecimalFormat decimalFormat = new DecimalFormat("0.00");//构造方法的字符格式这里如果小数不足2位,会以0补足.
             String v = decimalFormat.format(stepNumber * i);//format 返回的是字符串
             String text = String.valueOf(v);
@@ -535,9 +544,9 @@ public class LineChartView extends View {
      * 计算出Y轴平均后的坐标
      */
     private List<PointF> initNumberOfY() {
-        int yInterval = (yOri - yTop) / (numberOfY - 1);
+        int yInterval = (yOri - yTop) / (numberOfY);
         List<PointF> list = new ArrayList<>();
-        for (int i = 0; i < numberOfY; i++) {
+        for (int i = 0; i <= numberOfY; i++) {
             PointF point = new PointF();
             point.x = xOri;
             point.y = yOri - yInterval * i;
@@ -587,7 +596,8 @@ public class LineChartView extends View {
             }
         }
         DecimalFormat decimalFormat = new DecimalFormat("0.00");//构造方法的字符格式这里如果小数不足2位,会以0补足.
-        String v = decimalFormat.format(maxNumber);//format 返回的是字符串
+        float tempMax = maxNumber/(numberOfY-1) * numberOfY;
+        String v = decimalFormat.format(tempMax);//format 返回的是字符串
         String text = String.valueOf(v);
         Rect rect = getTextBounds(text, yTextPaint);
         y[0] = rect.width();
@@ -684,7 +694,21 @@ public class LineChartView extends View {
             pointList.add(yDatas);
         }
         initSize();
-        invalidate();
+        startAnim();
+//        invalidate();
+    }
+
+    private void startAnim() {
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(0,1.0f);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                zheOffset = (width-xOri)*valueAnimator.getAnimatedFraction();
+                invalidate();
+            }
+        });
+        valueAnimator.setDuration(Z_DUR);
+        valueAnimator.start();
     }
 
     public interface onTabSelectedListener {
